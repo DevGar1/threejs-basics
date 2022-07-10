@@ -1,9 +1,9 @@
-import { BoxBufferGeometry, Color, Mesh, MeshPhongMaterial, MeshNormalMaterial } from "three";
+import { BoxBufferGeometry, Color, Mesh, MeshStandardMaterial, MeshNormalMaterial } from "three";
 
 export default class CustomCube extends Mesh {
 	constructor(x, y, z) {
 		const geomery = new BoxBufferGeometry(x || 2, y || 2, z || 2);
-		const material = new MeshNormalMaterial({ color: new Color("blue") });
+		const material = new MeshStandardMaterial();
 		super(geomery, material);
 	}
 }
