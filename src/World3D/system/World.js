@@ -1,66 +1,53 @@
-import { Color, Mesh, MeshBasicMaterial, MeshNormalMaterial, Sphere, SphereBufferGeometry } from "three";
+import { Color, MathUtils, SpotLight } from "three";
 import { Cube } from "../components";
-import { Resizer } from "../setup";
 import { getSetUpScene } from "./main";
 
 let camera;
 let renderer;
 let scene;
+let loop;
 export default class World {
-	constructor(container) {
-		const { customCamera, customRenderer, customScene } = getSetUpScene(container);
-		camera = customCamera;
-		renderer = customRenderer;
-		container.append(renderer.domElement);
-		scene = customScene;
-		const cube = new Cube(2, 2, 2);
-		const data = new SphereBufferGeometry(1);
-		const cube2 = new Mesh(data, new MeshNormalMaterial());
-		scene.add(cube);
-		scene.add(cube2);
-		const resizer = new Resizer(container, camera, renderer);
-		this.changeBackgroundColor = this.changeBackgroundColor.bind(this);
-		let newTime = 0;
-		let isUp = true;
-		const mostDistance = 20;
-		function render() {
-			cube.rotateX(0.1);
-			cube.rotateZ(0.1);
-			cube2.rotateX(-0.1);
-			cube2.rotateZ(-0.1);
-			if (isUp && newTime < mostDistance) {
-				newTime += 0.1;
-			} else if (isUp && newTime > mostDistance) {
-				isUp = false;
-				newTime = mostDistance;
-			} else if (!isUp && newTime > -mostDistance) {
-				newTime -= 0.1;
-			} else {
-				isUp = true;
-				newTime = -mostDistance;
-			}
-			const r = 5;
-			const x = r * Math.cos(newTime / 2);
-			const y = r * Math.sin(newTime / 2);
-			const z = 0.5 * newTime;
+  constructor(container) {
+    const { customCamera, customRenderer, customScene, customLoop } = getSetUpScene(container);
+    camera = customCamera;
+    renderer = customRenderer;
+    loop = customLoop;
+    scene = customScene;
+    const light = new SpotLight("red");
+    light.position.set(0, 0, 10);
+    let newTime = 0;
+    light.tick = (delta, time) => {
+      const rads = MathUtils.degToRad(90);
+      newTime += delta * rads;
+      const y = 10;
+      const x = 10 * Math.cos(newTime);
+      const z = 10 * Math.sin(newTime);
+      light.position.set(x, y, z);
+      light.lookAt(0, 0, 0);
+    };
+    const cube = new Cube(2, 2, 2);
+    loop.addUpdatables(cube);
+    loop.addUpdatables(light);
+    scene.add(cube);
+    scene.add(light);
+    this.changeBackgroundColor = this.changeBackgroundColor.bind(this);
+    console.log(renderer);
+  }
 
-			cube2.position.set(x, z, y);
-			renderer.render(scene, camera);
-			requestAnimationFrame(render);
-		}
-		requestAnimationFrame(render);
-	}
+  changeBackgroundColor(color) {
+    scene.background = new Color(color.target.value);
+    this.render();
+  }
 
-	changeBackgroundColor(color) {
-		scene.background = new Color(color.target.value);
-		this.render();
-	}
+  render() {
+    console.log("render");
+    renderer.render(scene, camera);
+  }
+  start() {
+    loop.start();
+  }
 
-	moveCube(cube) {
-		cube.position;
-	}
-
-	render() {
-		renderer.render(scene, camera);
-	}
+  stop() {
+    loop.stop();
+  }
 }
